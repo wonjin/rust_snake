@@ -20,9 +20,9 @@ impl Direction {
 }
 
 #[derive(Clone)]
-struct Block {
-    x: i32,
-    y: i32,
+pub struct Block {
+    pub x: i32,
+    pub y: i32,
 }
 
 pub struct Snake {
@@ -78,7 +78,7 @@ impl Snake {
             },
             Direction::Up => Block {
                 x: head.x,
-                y: head.y + 1,
+                y: head.y - 1,
             },
             Direction::Left => Block {
                 x: head.x - 1,
@@ -106,5 +106,9 @@ impl Snake {
     pub fn restore_tail(&mut self) {
         let lost_tail = self.tail.clone().expect("No Tail");
         self.body.push_back(lost_tail);
+    }
+
+    pub fn get_body(&self) -> &LinkedList<Block>{
+        &self.body
     }
 }

@@ -1,6 +1,13 @@
 use crate::snake::{Direction, Snake};
+use crate::draw::*;
 use piston_window::*;
+use piston_window::types::Color;
 use rand::{thread_rng, Rng};
+
+const FOOD_COLOR: Color = [0.8, 0.0, 0.0, 1.0];
+const BOARD_COLOR: Color = [0.0, 0.8, 0.0, 1.0];
+const SNAKE_COLOR: Color = [0.0, 0.0, 0.8, 1.0];
+const GAME_OVER_COLOR: Color = [0.9, 0.0, 0.0, 0.5];
 
 const MOVING_PERIOD: f64 = 0.1;
 const RESTART_TIME: f64 = 1.0;
@@ -20,8 +27,8 @@ impl Game {
     pub fn new(width: i32, height: i32) -> Game {
         Game {
             food_exist: true,
-            food_x: 10,
-            food_y: 10,
+            food_x: 5,
+            food_y: 5,
             width,
             height,
             game_over: false,
@@ -40,7 +47,7 @@ impl Game {
             Key::Down => Some(Direction::Down),
             Key::Right => Some(Direction::Right),
             Key::Left => Some(Direction::Left),
-            _ => Some(Direction::Up),
+            _ => None,
         };
 
         // 만약 내가 이후에 dir을 쓴다고 한다면 reference로 받아야 함
@@ -53,16 +60,23 @@ impl Game {
 
     pub fn draw(&self, c: &Context, g: &mut G2d) {
         if self.food_exist {
-            // draw food
+            draw_block(FOOD_COLOR, self.food_x as i32, self.food_y as i32, c, g);
         }
 
         if self.game_over {
-            // draw game over            
+            draw_rectangle(GAME_OVER_COLOR, 0, 0, self.width, self.height, c, g);
         }
 
-        // draw game board
+        draw_rectangle(BOARD_COLOR, 0, 0, 1, self.height, c, g);
+        draw_rectangle(BOARD_COLOR, self.width - 1, 0, 1, self.height, c, g);
+        draw_rectangle(BOARD_COLOR, 0, 0, self.width, 1, c, g);
+        draw_rectangle(BOARD_COLOR, 0, self.height - 1, self.width, 1, c, g);
 
         // draw snake
+        let snake_body = self.snake.get_body();
+        for block in snake_body {
+            draw_block(SNAKE_COLOR, block.x, block.y, c, g);
+        }
     }
 
     pub fn update(&mut self, delta_time: f64) {
@@ -99,7 +113,7 @@ impl Game {
         }
 
         // 벽에 닿으면 false
-        next_x < 0 || next_y < 0 || next_x >= self.width || next_y >= self.height
+        next_x >= 0 && next_y >= 0 && next_x < self.width && next_y < self.height
     }
 
     fn add_food(&mut self) {
@@ -126,15 +140,20 @@ impl Game {
                 self.snake.restore_tail();
                 self.food_exist = false;
             }
+            // TODO 게임 완료 분기 넣어야 함
+        }
+        else {
+            self.game_over = true;
         }
 
         self.waiting_time = 0.0;
     }
 
+    // TODO new 메서드랑 동일하게 하는 장치가 필요함
     fn restart(&mut self) {
         self.food_exist = true;
-        self.food_x = 10;
-        self.food_y = 10;
+        self.food_x = 5;
+        self.food_y = 5;
         self.game_over = false;
         self.waiting_time = 0.0;
         self.snake = Snake::new(3, 3);
